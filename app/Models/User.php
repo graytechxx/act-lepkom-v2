@@ -1,0 +1,102 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+class User extends Authenticatable
+{
+    use Notifiable;
+
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'role',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
+
+    // Roles
+    const ROLE_SUPERADMIN = 'superadmin';
+    const ROLE_STAFF = 'staff';
+    const ROLE_ASISTEN = 'asisten';
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === self::ROLE_SUPERADMIN;
+    }
+
+    public function isStaff(): bool
+    {
+        return $this->role === self::ROLE_STAFF;
+    }
+
+    public function isAsisten(): bool
+    {
+        return $this->role === self::ROLE_ASISTEN;
+    }
+
+    // Relations
+    public function announcements()
+    {
+        return $this->hasMany(Announcement::class, 'created_by');
+    }
+
+    public function calEvents()
+    {
+        return $this->hasMany(CalEvent::class, 'created_by');
+    }
+
+    public function materials()
+    {
+        return $this->hasMany(Material::class, 'uploaded_by');
+    }
+
+    public function privateNotes()
+    {
+        return $this->hasMany(PrivateNote::class);
+    }
+
+    public function pastebins()
+    {
+        return $this->hasMany(Pastebin::class);
+    }
+
+    public function uploads()
+    {
+        return $this->hasMany(Upload::class);
+    }
+
+    public function chatMessages()
+    {
+        return $this->hasMany(ChatMessage::class);
+    }
+
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class, 'assistant_id');
+    }
+
+    public function preference()
+    {
+        return $this->hasOne(UserPreference::class);
+    }
+
+    public function activityLogs()
+    {
+        return $this->hasMany(ActivityLog::class);
+    }
+}
