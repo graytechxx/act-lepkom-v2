@@ -10,10 +10,10 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Superadmin — same creds as original LMS
+        // Superadmin
         User::create([
             'name' => 'Super Admin',
-            'email' => 'superadmin@lms.com',
+            'email' => 'admin001',
             'password' => Hash::make('password123'),
             'role' => User::ROLE_SUPERADMIN,
         ]);
@@ -21,7 +21,7 @@ class UserSeeder extends Seeder
         // Staff
         User::create([
             'name' => 'Staff Lepkom J5',
-            'email' => 'staff@lepkom-j5.com',
+            'email' => 'staff001',
             'password' => Hash::make('password123'),
             'role' => User::ROLE_STAFF,
         ]);
@@ -38,10 +38,11 @@ class UserSeeder extends Seeder
             'Arif Yanuar Pratama',
         ];
 
-        foreach ($asistens as $name) {
+        foreach ($asistens as $index => $name) {
+            $num = str_pad($index + 1, 3, '0', STR_PAD_LEFT);
             User::create([
                 'name' => $name,
-                'email' => strtolower(str_replace(' ', '.', $name)) . '@lepkom-j5.com',
+                'email' => "ast{$num}",
                 'password' => Hash::make('password123'),
                 'role' => User::ROLE_ASISTEN,
             ]);

@@ -14,6 +14,9 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'active_room',
+        'is_pj',
+        'last_seen_at',
     ];
 
     protected $hidden = [
@@ -26,6 +29,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_pj' => 'boolean',
+            'last_seen_at' => 'datetime',
         ];
     }
 
@@ -83,11 +88,6 @@ class User extends Authenticatable
     public function chatMessages()
     {
         return $this->hasMany(ChatMessage::class);
-    }
-
-    public function attendances()
-    {
-        return $this->hasMany(Attendance::class, 'assistant_id');
     }
 
     public function preference()

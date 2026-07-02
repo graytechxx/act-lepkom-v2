@@ -1,11 +1,8 @@
-import Checkbox from '@/Components/Checkbox';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
+import { FormEventHandler, useEffect } from 'react';
+import GuestLayout from '@/Layouts/GuestLayout';
+import GlassInput from '@/Components/GlassInput';
+import GlassButton from '@/Components/GlassButton';
 
 export default function Login({
     status,
@@ -17,92 +14,90 @@ export default function Login({
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
-        remember: false as boolean,
+        remember: false,
     });
+
+    useEffect(() => {
+        return () => {
+            reset('password');
+        };
+    }, []);
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-
-        post(route('login'), {
-            onFinish: () => reset('password'),
-        });
+        post(route('login'));
     };
 
     return (
         <GuestLayout>
-            <Head title="Log in" />
+            <Head title="Log In" />
 
             {status && (
-                <div className="mb-4 text-sm font-medium text-green-600">
+                <div className="mb-4 text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-lg text-center animate-pulse">
                     {status}
                 </div>
             )}
 
-            <form onSubmit={submit}>
+            <form onSubmit={submit} className="space-y-4">
+                <GlassInput
+                    id="email"
+                    type="text"
+                    name="email"
+                    label="ID Asisten (Username)"
+                    placeholder="Contoh: AST001"
+                    value={data.email}
+                    autoComplete="username"
+                    onChange={(e) => setData('email', e.target.value)}
+                    error={errors.email}
+                />
+
                 <div>
-                    <InputLabel htmlFor="email" value="Email" />
-
-                    <TextInput
-                        id="email"
-                        type="email"
-                        name="email"
-                        value={data.email}
-                        className="mt-1 block w-full"
-                        autoComplete="username"
-                        isFocused={true}
-                        onChange={(e) => setData('email', e.target.value)}
-                    />
-
-                    <InputError message={errors.email} className="mt-2" />
-                </div>
-
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
-                    <TextInput
+                    <GlassInput
                         id="password"
                         type="password"
                         name="password"
+                        label="Kata Sandi"
+                        placeholder="••••••••"
                         value={data.password}
-                        className="mt-1 block w-full"
                         autoComplete="current-password"
                         onChange={(e) => setData('password', e.target.value)}
+                        error={errors.password}
                     />
-
-                    <InputError message={errors.password} className="mt-2" />
                 </div>
 
-                <div className="mt-4 block">
-                    <label className="flex items-center">
-                        <Checkbox
+                <div className="flex items-center justify-between mt-2">
+                    <label className="flex items-center select-none cursor-pointer">
+                        <input
+                            type="checkbox"
                             name="remember"
                             checked={data.remember}
-                            onChange={(e) =>
-                                setData(
-                                    'remember',
-                                    (e.target.checked || false) as false,
-                                )
-                            }
+                            onChange={(e) => setData('remember', e.target.checked)}
+                            className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500/20 focus:ring-offset-slate-900"
                         />
-                        <span className="ms-2 text-sm text-gray-600 dark:text-gray-400">
-                            Remember me
+                        <span className="ms-2 text-2xs font-semibold text-slate-400 uppercase tracking-wider">
+                            Ingat Saya
                         </span>
                     </label>
-                </div>
 
-                <div className="mt-4 flex items-center justify-end">
                     {canResetPassword && (
                         <Link
                             href={route('password.request')}
-                            className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:text-gray-400 dark:hover:text-gray-100 dark:focus:ring-offset-gray-800"
+                            className="text-2xs font-bold text-slate-400 hover:text-indigo-400 transition"
                         >
-                            Forgot your password?
+                            Lupa Password?
                         </Link>
                     )}
+                </div>
 
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Log in
-                    </PrimaryButton>
+                <div className="pt-2">
+                    <GlassButton
+                        type="submit"
+                        variant="primary"
+                        className="w-full text-xs font-bold py-3"
+                        disabled={processing}
+                    >
+                        Masuk Ke Portal
+                    </GlassButton>
                 </div>
             </form>
         </GuestLayout>

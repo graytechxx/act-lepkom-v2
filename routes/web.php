@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\UserPreferenceController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\AssistantController;
 use Illuminate\Support\Facades\Route;
 
 // ============ PUBLIC ROUTES ============
@@ -24,6 +25,7 @@ Route::get('/', [PublicController::class, 'home'])->name('home');
 Route::get('/materi', [PublicController::class, 'materi'])->name('materi');
 Route::get('/tata-tertib', [PublicController::class, 'tataTertib'])->name('tata-tertib');
 Route::get('/login', [PublicController::class, 'login'])->name('login');
+Route::post('/public/upload', [UploadController::class, 'publicUpload'])->name('public.upload');
 
 // Public API
 Route::get('/api/announcements', [AnnouncementController::class, 'public']);
@@ -36,6 +38,7 @@ Route::get('/p/{code}', [PastebinController::class, 'show'])->name('pastebin.sho
 Route::middleware(['auth'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/admin/toggle-pj', [DashboardController::class, 'togglePj'])->name('admin.toggle-pj');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
@@ -47,6 +50,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Levels (Master)
     Route::resource('/admin/levels', LevelController::class)->except(['show', 'create', 'edit']);
+
+    // Assistants (CRUD)
+    Route::resource('/admin/assistants', AssistantController::class)->except(['show', 'create', 'edit']);
 
     // Courses (Master)
     Route::resource('/admin/courses', CourseController::class)->except(['show', 'create', 'edit']);
@@ -89,10 +95,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/chat', [ChatController::class, 'index'])->name('chat');
     Route::get('/api/chat/messages', [ChatController::class, 'messages']);
     Route::post('/api/chat/messages', [ChatController::class, 'store']);
-
-    // Attendance
-    Route::resource('/admin/attendance', AttendanceController::class)->except(['show', 'create', 'edit']);
-    Route::get('/api/attendance', [AttendanceController::class, 'byDate']);
 
     // Activity Logs
     Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs');

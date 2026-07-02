@@ -43,6 +43,36 @@ class UploadController extends Controller
         return redirect()->back()->with('success', 'Upload berhasil');
     }
 
+    public function publicUpload(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|max:51200',
+            'student_name' => 'required|string|max:255',
+            'student_npm' => 'required|string|max:50',
+            'level_id' => 'required|exists:levels,id',
+            'course_id' => 'required|exists:courses,id',
+            'room_name' => 'nullable|string|max:100',
+        ]);
+
+        $file = $request->file('file');
+        $path = $file->store('uploads');
+
+        Upload::create([
+            'user_id' => null,
+            'student_name' => $request->student_name,
+            'student_npm' => $request->student_npm,
+            'level_id' => $request->level_id,
+            'course_id' => $request->course_id,
+            'original_name' => $file->getClientOriginalName(),
+            'stored_path' => $path,
+            'mime_type' => $file->getMimeType(),
+            'size' => $file->getSize(),
+            'room_name' => $request->room_name,
+        ]);
+
+        return redirect()->back()->with('success', 'Tugas Anda berhasil diunggah!');
+    }
+
     public function destroy(Upload $upload)
     {
         if (Storage::exists($upload->stored_path)) {
