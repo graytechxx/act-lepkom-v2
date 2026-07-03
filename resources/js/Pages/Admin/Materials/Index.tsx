@@ -27,6 +27,7 @@ interface Material {
     path: string;
     mime_type: string | null;
     size: number | null;
+    meeting_number: number | null;
     created_at: string;
     level?: { name: string };
     course?: { name: string };
@@ -46,6 +47,7 @@ export const Index: React.FC<MaterialsProps> = ({ materials, levels }) => {
         file: null as File | null,
         level_id: '',
         course_id: '',
+        meeting_number: '',
     });
 
     // Form for manual link or folder creation
@@ -55,6 +57,7 @@ export const Index: React.FC<MaterialsProps> = ({ materials, levels }) => {
         name: '',
         type: 'link', // link or folder
         path: '',
+        meeting_number: '',
     });
 
     const handleUploadSubmit = (e: React.FormEvent) => {
@@ -161,6 +164,15 @@ export const Index: React.FC<MaterialsProps> = ({ materials, levels }) => {
                                         error={uploadForm.errors.course_id}
                                     />
 
+                                    <GlassInput
+                                        label="Pertemuan Ke-"
+                                        placeholder="-- Pilih Pertemuan --"
+                                        value={uploadForm.data.meeting_number}
+                                        onChange={(e) => uploadForm.setData('meeting_number', e.target.value)}
+                                        options={Array.from({ length: 8 }).map((_, i) => ({ value: (i + 1).toString(), label: `Pertemuan ${i + 1}` }))}
+                                        error={uploadForm.errors.meeting_number}
+                                    />
+
                                     <div>
                                         <label className="block text-xs font-semibold uppercase tracking-wider mb-2 text-slate-400">Pilih Berkas (Max 50MB)</label>
                                         <input
@@ -207,6 +219,15 @@ export const Index: React.FC<MaterialsProps> = ({ materials, levels }) => {
                                         options={manualCoursesOptions}
                                         disabled={!manualForm.data.level_id}
                                         error={manualForm.errors.course_id}
+                                    />
+
+                                    <GlassInput
+                                        label="Pertemuan Ke-"
+                                        placeholder="-- Pilih Pertemuan --"
+                                        value={manualForm.data.meeting_number}
+                                        onChange={(e) => manualForm.setData('meeting_number', e.target.value)}
+                                        options={Array.from({ length: 8 }).map((_, i) => ({ value: (i + 1).toString(), label: `Pertemuan ${i + 1}` }))}
+                                        error={manualForm.errors.meeting_number}
                                     />
 
                                     <GlassInput
@@ -300,7 +321,7 @@ export const Index: React.FC<MaterialsProps> = ({ materials, levels }) => {
                                                                 {mat.level?.name || 'N/A'}
                                                             </div>
                                                             <div className="text-slate-400 text-3xs font-bold uppercase">
-                                                                {mat.course?.name || 'Umum'}
+                                                                {mat.course?.name || 'Umum'} {mat.meeting_number ? `• Pertemuan ${mat.meeting_number}` : ''}
                                                             </div>
                                                         </td>
                                                         <td className="py-3 px-2 font-mono text-slate-400 uppercase text-3xs">

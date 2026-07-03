@@ -33,6 +33,7 @@ Route::get('/api/rules', [RuleController::class, 'public']);
 Route::get('/api/events', [CalendarController::class, 'publicEvents']);
 Route::get('/api/materials', [MaterialController::class, 'publicIndex']);
 Route::get('/p/{code}', [PastebinController::class, 'show'])->name('pastebin.show');
+Route::get('/admin/materials/{material}/download', [MaterialController::class, 'download'])->name('materials.download');
 
 // ============ AUTHENTICATED ROUTES ============
 Route::middleware(['auth'])->group(function () {
@@ -77,7 +78,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/admin/materials', [MaterialController::class, 'store']);
     Route::post('/admin/materials/upload', [MaterialController::class, 'upload'])->name('materials.upload');
     Route::delete('/admin/materials/{material}', [MaterialController::class, 'destroy']);
-    Route::get('/admin/materials/{material}/download', [MaterialController::class, 'download'])->name('materials.download');
 
     // Private Notes
     Route::resource('/admin/notes', PrivateNoteController::class)->except(['show', 'create', 'edit']);

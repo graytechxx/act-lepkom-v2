@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('mime_type', 100)->nullable();
             $table->bigInteger('size')->nullable(); // bytes
             $table->foreignId('uploaded_by')->constrained('users')->cascadeOnDelete();
+            $table->integer('meeting_number')->nullable();
             $table->timestamps();
         });
     }

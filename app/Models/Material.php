@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Material extends Model
 {
     protected $fillable = [
-        'level_id', 'course_id', 'name', 'type', 'path', 'mime_type', 'size', 'uploaded_by'
+        'level_id', 'course_id', 'name', 'type', 'path', 'mime_type', 'size', 'uploaded_by', 'meeting_number'
     ];
 
     public function level()

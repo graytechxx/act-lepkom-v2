@@ -29,6 +29,7 @@ class MaterialController extends Controller
             'path' => 'required|string|max:500',
             'mime_type' => 'nullable|string|max:100',
             'size' => 'nullable|integer',
+            'meeting_number' => 'nullable|integer|min:1|max:8',
         ]);
 
         $validated['uploaded_by'] = $request->user()->id;
@@ -44,6 +45,7 @@ class MaterialController extends Controller
             'file' => 'required|file|max:51200', // 50MB max
             'level_id' => 'nullable|exists:levels,id',
             'course_id' => 'nullable|exists:courses,id',
+            'meeting_number' => 'nullable|integer|min:1|max:8',
         ]);
 
         $file = $request->file('file');
@@ -58,6 +60,7 @@ class MaterialController extends Controller
             'mime_type' => $file->getMimeType(),
             'size' => $file->getSize(),
             'uploaded_by' => $request->user()->id,
+            'meeting_number' => $request->meeting_number,
         ]);
 
         return redirect()->back()->with('success', 'File berhasil diupload');
@@ -78,6 +81,12 @@ class MaterialController extends Controller
     {
         if ($material->type !== 'file' || !Storage::exists($material->path)) {
             return redirect()->back()->with('error', 'File tidak ditemukan');
+        }
+
+        if (request()->query('inline') === 'true') {
+            return Storage::response($material->path, $material->name, [
+                'Content-Type' => $material->mime_type ?? 'application/octet-stream',
+            ]);
         }
 
         return Storage::download($material->path, $material->name);

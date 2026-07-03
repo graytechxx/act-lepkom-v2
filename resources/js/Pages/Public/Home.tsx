@@ -147,9 +147,10 @@ export const Home: React.FC<HomeProps> = ({ announcements, levels, upcomingEvent
                 {/* Grid Content */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     
-                    {/* Left & Middle Column: Announcements */}
-                    <div className="lg:col-span-2 space-y-8">
-                        <div>
+                    {/* Left & Middle Column: Announcements & Upload Form */}
+                    <div className="lg:col-span-2 space-y-10">
+                        {/* Announcements Section */}
+                        <div className="space-y-4">
                             <h2 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2 uppercase tracking-wider">
                                 <svg className="h-5 w-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -189,12 +190,134 @@ export const Home: React.FC<HomeProps> = ({ announcements, levels, upcomingEvent
                                 </div>
                             )}
                         </div>
+
+                        {/* Direct File Upload Panel (Moved here and structured in grid) */}
+                        <div className="space-y-4">
+                            <h2 className="text-base font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider">
+                                <svg className="h-5 w-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                </svg>
+                                Pengumpulan Berkas ACT
+                            </h2>
+                            <GlassCard light className="bg-gradient-to-tr from-white/90 to-slate-50/80 border border-white shadow-md relative overflow-hidden p-6 sm:p-8">
+                                <div className="flex items-center gap-3 mb-6 border-b border-slate-200/50 pb-3">
+                                    <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
+                                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                        </svg>
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h3 className="font-extrabold text-slate-800 text-xs sm:text-sm uppercase tracking-wide">Unggah Berkas Laporan Praktikum</h3>
+                                        <p className="text-3xs text-slate-400 font-bold uppercase">Unggah langsung laporan tanpa login</p>
+                                    </div>
+                                </div>
+
+                                {flash.success && (
+                                    <div className="mb-6 text-3xs font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg text-center animate-pulse">
+                                        {flash.success}
+                                    </div>
+                                )}
+
+                                <form onSubmit={handleUploadSubmit} className="space-y-5">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                        <GlassInput
+                                            light
+                                            label="Nama Lengkap Praktikan"
+                                            placeholder="Contoh: Budi Santoso"
+                                            value={uploadForm.data.student_name}
+                                            onChange={(e) => uploadForm.setData('student_name', e.target.value)}
+                                            error={uploadForm.errors.student_name}
+                                            className="py-2 text-xs"
+                                        />
+
+                                        <GlassInput
+                                            light
+                                            label="NPM Praktikan"
+                                            placeholder="Contoh: 10121345"
+                                            value={uploadForm.data.student_npm}
+                                            onChange={(e) => uploadForm.setData('student_npm', e.target.value)}
+                                            error={uploadForm.errors.student_npm}
+                                            className="py-2 text-xs"
+                                        />
+
+                                        <GlassInput
+                                            light
+                                            label="Tingkat Praktikum"
+                                            placeholder="-- Pilih Tingkat --"
+                                            value={uploadForm.data.level_id}
+                                            onChange={(e) => {
+                                                uploadForm.setData(prev => ({
+                                                    ...prev,
+                                                    level_id: e.target.value,
+                                                    course_id: ''
+                                                }));
+                                            }}
+                                            options={levels.map(l => ({ value: l.id.toString(), label: l.name }))}
+                                            error={uploadForm.errors.level_id}
+                                            className="py-2 text-xs"
+                                        />
+
+                                        <GlassInput
+                                            light
+                                            label="Mata Praktikum"
+                                            placeholder="-- Pilih Praktikum --"
+                                            value={uploadForm.data.course_id}
+                                            onChange={(e) => uploadForm.setData('course_id', e.target.value)}
+                                            options={coursesOptions}
+                                            disabled={!uploadForm.data.level_id}
+                                            error={uploadForm.errors.course_id}
+                                            className="py-2 text-xs"
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-end">
+                                        <div>
+                                            <div className="flex justify-between items-center mb-1.5">
+                                                <label className="block text-3xs font-extrabold uppercase tracking-widest text-slate-400">Lokasi Ruang Lab</label>
+                                                <span className="text-3xs font-extrabold text-indigo-600 uppercase tracking-widest">
+                                                    {clientRoom ? `Lab ${clientRoom}` : 'Remote / Luar Lab'}
+                                                </span>
+                                            </div>
+                                            <GlassInput
+                                                light
+                                                placeholder="N/A"
+                                                value={uploadForm.data.room_name || 'Remote'}
+                                                disabled
+                                                className="py-2 text-xs opacity-75 bg-slate-50"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-3xs font-extrabold uppercase tracking-widest text-slate-400 mb-1.5">Pilih Berkas ACT (Max 50MB)</label>
+                                            <input
+                                                type="file"
+                                                onChange={(e) => uploadForm.setData('file', e.target.files?.[0] || null)}
+                                                className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-3xs file:font-bold file:bg-indigo-50 file:text-indigo-600 file:cursor-pointer hover:file:bg-indigo-100 transition-all"
+                                            />
+                                            {uploadForm.errors.file && (
+                                                <p className="mt-1 text-3xs text-red-500 font-bold">{uploadForm.errors.file}</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <GlassButton
+                                        type="submit"
+                                        variant="primary"
+                                        className="w-full text-xs font-bold py-2.5 mt-4"
+                                        disabled={uploadForm.processing}
+                                        loading={uploadForm.processing}
+                                    >
+                                        Unggah Laporan ACT
+                                    </GlassButton>
+                                </form>
+                            </GlassCard>
+                        </div>
                     </div>
 
-                    {/* Right Column: Interactive Calendar Grid on Top & Upload Form below */}
+                    {/* Right Column: Interactive Calendar Grid on Top */}
                     <div className="space-y-8">
                         
-                        {/* Interactive Monthly Grid Calendar Widget (Placed on Top) */}
+                        {/* Interactive Monthly Grid Calendar Widget */}
                         <div className="space-y-3">
                             <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
                                 <svg className="h-3.5 w-3.5 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -307,116 +430,6 @@ export const Home: React.FC<HomeProps> = ({ announcements, levels, upcomingEvent
                                 </div>
                             </GlassCard>
                         </div>
-
-                        {/* Direct File Upload Panel (Placed below Calendar) */}
-                        <GlassCard light className="bg-gradient-to-tr from-white/90 to-slate-50/80 border border-white shadow-md relative overflow-hidden">
-                            <div className="flex items-center gap-3 mb-5 border-b border-slate-200/50 pb-3">
-                                <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
-                                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                                    </svg>
-                                </div>
-                                <div className="min-w-0">
-                                    <h3 className="font-extrabold text-slate-800 text-xs sm:text-sm uppercase tracking-wide">Pengumpulan Berkas ACT</h3>
-                                    <p className="text-3xs text-slate-400 font-bold uppercase">Unggah langsung laporan tanpa login</p>
-                                </div>
-                            </div>
-
-                            {flash.success && (
-                                <div className="mb-4 text-3xs font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg text-center animate-pulse">
-                                    {flash.success}
-                                </div>
-                            )}
-
-                            <form onSubmit={handleUploadSubmit} className="space-y-3">
-                                <GlassInput
-                                    light
-                                    label="Nama Lengkap Praktikan"
-                                    placeholder="Contoh: Budi Santoso"
-                                    value={uploadForm.data.student_name}
-                                    onChange={(e) => uploadForm.setData('student_name', e.target.value)}
-                                    error={uploadForm.errors.student_name}
-                                    className="py-2 text-xs"
-                                />
-
-                                <GlassInput
-                                    light
-                                    label="NPM Praktikan"
-                                    placeholder="Contoh: 10121345"
-                                    value={uploadForm.data.student_npm}
-                                    onChange={(e) => uploadForm.setData('student_npm', e.target.value)}
-                                    error={uploadForm.errors.student_npm}
-                                    className="py-2 text-xs"
-                                />
-
-                                <GlassInput
-                                    light
-                                    label="Tingkat Praktikum"
-                                    placeholder="-- Pilih Tingkat --"
-                                    value={uploadForm.data.level_id}
-                                    onChange={(e) => {
-                                        uploadForm.setData(prev => ({
-                                            ...prev,
-                                            level_id: e.target.value,
-                                            course_id: ''
-                                        }));
-                                    }}
-                                    options={levels.map(l => ({ value: l.id.toString(), label: l.name }))}
-                                    error={uploadForm.errors.level_id}
-                                    className="py-2 text-xs"
-                                />
-
-                                <GlassInput
-                                    light
-                                    label="Mata Praktikum"
-                                    placeholder="-- Pilih Praktikum --"
-                                    value={uploadForm.data.course_id}
-                                    onChange={(e) => uploadForm.setData('course_id', e.target.value)}
-                                    options={coursesOptions}
-                                    disabled={!uploadForm.data.level_id}
-                                    error={uploadForm.errors.course_id}
-                                    className="py-2 text-xs"
-                                />
-
-                                <div className="grid grid-cols-2 gap-3 items-end">
-                                    <div className="col-span-1">
-                                        <GlassInput
-                                            light
-                                            label="Lokasi Ruang Lab"
-                                            placeholder="N/A"
-                                            value={uploadForm.data.room_name || 'Remote'}
-                                            disabled
-                                            className="py-2 text-xs opacity-75"
-                                        />
-                                    </div>
-                                    <div className="col-span-1 pb-3 text-3xs font-extrabold text-slate-400 uppercase tracking-widest text-right">
-                                        {clientRoom ? `Lab ${clientRoom}` : 'Luar Lab'}
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-3xs font-extrabold uppercase tracking-widest text-slate-400 mb-1.5">Pilih Berkas ACT (Max 50MB)</label>
-                                    <input
-                                        type="file"
-                                        onChange={(e) => uploadForm.setData('file', e.target.files?.[0] || null)}
-                                        className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-3xs file:font-bold file:bg-indigo-50 file:text-indigo-600 file:cursor-pointer hover:file:bg-indigo-100 transition-all"
-                                    />
-                                    {uploadForm.errors.file && (
-                                        <p className="mt-1 text-3xs text-red-500 font-bold">{uploadForm.errors.file}</p>
-                                    )}
-                                </div>
-
-                                <GlassButton
-                                    type="submit"
-                                    variant="primary"
-                                    className="w-full text-xs font-bold py-2.5 mt-3"
-                                    disabled={uploadForm.processing}
-                                    loading={uploadForm.processing}
-                                >
-                                    Unggah Laporan ACT
-                                </GlassButton>
-                            </form>
-                        </GlassCard>
 
                     </div>
                 </div>
