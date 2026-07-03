@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\UserPreferenceController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\AssistantController;
+use App\Http\Controllers\Admin\ScheduleController;
 use Illuminate\Support\Facades\Route;
 
 // ============ PUBLIC ROUTES ============
@@ -25,6 +26,7 @@ Route::get('/', [PublicController::class, 'home'])->name('home');
 Route::get('/materi', [PublicController::class, 'materi'])->name('materi');
 Route::get('/tata-tertib', [PublicController::class, 'tataTertib'])->name('tata-tertib');
 Route::get('/login', [PublicController::class, 'login'])->name('login');
+Route::get('/jadwal-asisten', [PublicController::class, 'jadwalAsisten'])->name('jadwal-asisten');
 Route::post('/public/upload', [UploadController::class, 'publicUpload'])->name('public.upload');
 
 // Public API
@@ -84,6 +86,10 @@ Route::middleware(['auth'])->group(function () {
 
     // Pastebins
     Route::resource('/admin/pastebins', PastebinController::class)->except(['show', 'create', 'edit']);
+
+    // Schedules
+    Route::get('/admin/schedules', [ScheduleController::class, 'index'])->name('admin.schedules');
+    Route::post('/admin/schedules', [ScheduleController::class, 'store']);
 
     // Uploads
     Route::get('/admin/uploads', [UploadController::class, 'index'])->name('uploads');

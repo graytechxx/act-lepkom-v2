@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage, router } from '@inertiajs/react';
 import GlassPublicLayout from '@/Layouts/GlassPublicLayout';
 import GlassCard from '@/Components/GlassCard';
 import GlassInput from '@/Components/GlassInput';
@@ -52,6 +52,20 @@ const WEEKDAYS = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 export const Home: React.FC<HomeProps> = ({ announcements, levels, upcomingEvents }) => {
     const { flash } = usePage<any>().props;
     const [clientRoom, setClientRoom] = useState<string>('');
+
+    // Pastebin search state
+    const [pastebinCode, setPastebinCode] = useState('');
+    const [searchError, setSearchError] = useState('');
+
+    const handlePastebinSearchSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!pastebinCode.trim()) {
+            setSearchError('Kode tidak boleh kosong');
+            return;
+        }
+        setSearchError('');
+        router.visit(`/p/${pastebinCode.trim()}`);
+    };
 
     // Calendar state
     const [calendarDate, setCalendarDate] = useState(new Date());
@@ -317,6 +331,42 @@ export const Home: React.FC<HomeProps> = ({ announcements, levels, upcomingEvent
                     {/* Right Column: Interactive Calendar Grid on Top */}
                     <div className="space-y-8">
                         
+                        {/* Search Pastebin Widget */}
+                        <div className="space-y-3">
+                            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                                <svg className="h-4 w-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                Cari Pastebin
+                            </h3>
+
+                            <GlassCard light className="p-5 border border-slate-100 shadow-sm bg-white/70">
+                                <form onSubmit={handlePastebinSearchSubmit} className="space-y-3">
+                                    <p className="text-3xs text-slate-400 font-bold uppercase tracking-wider mb-2">
+                                        Masukkan kode unik pastebin untuk melihat source code yang dibagikan.
+                                    </p>
+                                    <GlassInput
+                                        light
+                                        placeholder="Contoh: pert-1"
+                                        value={pastebinCode}
+                                        onChange={(e) => {
+                                            setPastebinCode(e.target.value);
+                                            if (searchError) setSearchError('');
+                                        }}
+                                        error={searchError}
+                                        className="py-2.5 text-xs mb-0"
+                                    />
+                                    <GlassButton
+                                        type="submit"
+                                        variant="primary"
+                                        className="w-full text-xs font-bold py-2.5 mt-2"
+                                    >
+                                        Buka Kode
+                                    </GlassButton>
+                                </form>
+                            </GlassCard>
+                        </div>
+
                         {/* Interactive Monthly Grid Calendar Widget */}
                         <div className="space-y-3">
                             <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">

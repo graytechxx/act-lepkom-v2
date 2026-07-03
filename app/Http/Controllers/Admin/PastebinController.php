@@ -20,13 +20,13 @@ class PastebinController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'code' => 'required|string|max:20|alpha_dash|unique:pastebins,code',
             'content' => 'required|string',
             'language' => 'nullable|string|max:50',
             'is_public' => 'boolean',
         ]);
 
         $validated['user_id'] = $request->user()->id;
-        $validated['code'] = Str::random(10);
 
         Pastebin::create($validated);
 
@@ -41,6 +41,7 @@ class PastebinController extends Controller
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'code' => 'required|string|max:20|alpha_dash|unique:pastebins,code,' . $pastebin->id,
             'content' => 'required|string',
             'language' => 'nullable|string|max:50',
             'is_public' => 'boolean',

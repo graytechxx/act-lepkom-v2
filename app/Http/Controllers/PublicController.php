@@ -58,4 +58,12 @@ class PublicController extends Controller
     {
         return inertia('Public/Login');
     }
+
+    public function jadwalAsisten()
+    {
+        $schedule = \App\Models\Schedule::where('key', 'assistant_schedule')->first();
+        return inertia('Public/JadwalAsisten', [
+            'schedule' => $schedule ? $schedule->data : [],
+        ]);
+    }
 }

@@ -38,6 +38,7 @@ export const Index: React.FC<PastebinsProps> = ({ pastebins }) => {
 
     const { data, setData, post, patch, delete: destroy, processing, errors, reset } = useForm({
         title: '',
+        code: '',
         content: '',
         language: 'plain',
         is_public: true,
@@ -74,6 +75,7 @@ export const Index: React.FC<PastebinsProps> = ({ pastebins }) => {
         setEditingPaste(paste);
         setData({
             title: paste.title,
+            code: paste.code,
             content: paste.content,
             language: paste.language || 'plain',
             is_public: !!paste.is_public,
@@ -113,6 +115,14 @@ export const Index: React.FC<PastebinsProps> = ({ pastebins }) => {
                                     value={data.title}
                                     onChange={(e) => setData('title', e.target.value)}
                                     error={errors.title}
+                                />
+
+                                <GlassInput
+                                    label="Kode Unik Pastebin"
+                                    placeholder="Contoh: pert-1 (max 20 karakter)"
+                                    value={data.code}
+                                    onChange={(e) => setData('code', e.target.value)}
+                                    error={errors.code}
                                 />
 
                                 <GlassInput
@@ -195,8 +205,8 @@ export const Index: React.FC<PastebinsProps> = ({ pastebins }) => {
                                                         </span>
                                                         <h3 className="font-extrabold text-slate-200 text-sm leading-snug">{paste.title}</h3>
                                                     </div>
-                                                    <p className="text-4xs text-slate-500 font-bold uppercase mt-1">
-                                                        DIBUAT: {new Date(paste.created_at).toLocaleDateString('id-ID', {
+                                                    <p className="text-4xs text-slate-400 font-bold uppercase mt-1">
+                                                        KODE: <span className="text-indigo-400 font-mono select-all bg-indigo-500/5 px-1.5 py-0.5 rounded">{paste.code}</span> • DIBUAT: {new Date(paste.created_at).toLocaleDateString('id-ID', {
                                                             day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
                                                         })}
                                                     </p>
