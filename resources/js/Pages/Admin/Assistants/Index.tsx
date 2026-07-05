@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, usePage, router } from '@inertiajs/react';
 import GlassAdminLayout from '@/Layouts/GlassAdminLayout';
 import GlassCard from '@/Components/GlassCard';
 import GlassInput from '@/Components/GlassInput';
@@ -10,6 +10,7 @@ interface Assistant {
     name: string;
     email: string;
     role: string;
+    tag?: string | null;
 }
 
 interface AssistantsProps {
@@ -17,6 +18,7 @@ interface AssistantsProps {
 }
 
 export const Index: React.FC<AssistantsProps> = ({ assistants }) => {
+    const { auth } = usePage<any>().props;
     const [editingAssistant, setEditingAssistant] = useState<Assistant | null>(null);
 
     const { data, setData, post, patch, delete: destroy, processing, errors, reset } = useForm({
@@ -24,11 +26,12 @@ export const Index: React.FC<AssistantsProps> = ({ assistants }) => {
         email: '',
         role: 'asisten',
         password: '',
+        tag: '',
     });
 
     const handleCreateSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/admin/assistants', {
+        post('/admin/assistants/store', {
             onSuccess: () => {
                 reset();
             }
@@ -38,7 +41,7 @@ export const Index: React.FC<AssistantsProps> = ({ assistants }) => {
     const handleUpdateSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (editingAssistant) {
-            patch(`/admin/assistants/${editingAssistant.id}`, {
+            post(`/admin/assistants/${editingAssistant.id}/update`, {
                 onSuccess: () => {
                     setEditingAssistant(null);
                     reset();
@@ -49,7 +52,7 @@ export const Index: React.FC<AssistantsProps> = ({ assistants }) => {
 
     const handleDelete = (id: number) => {
         if (confirm('Apakah Anda yakin ingin menghapus akun asisten ini? Tindakan ini tidak dapat dibatalkan.')) {
-            destroy(`/admin/assistants/${id}`);
+            router.post(`/admin/assistants/${id}/delete`);
         }
     };
 
@@ -60,6 +63,7 @@ export const Index: React.FC<AssistantsProps> = ({ assistants }) => {
             email: ast.email,
             role: ast.role,
             password: '', // Leave password blank on edit unless updating
+            tag: ast.tag || '',
         });
     };
 
@@ -111,6 +115,20 @@ export const Index: React.FC<AssistantsProps> = ({ assistants }) => {
                                     ]}
                                     error={errors.role}
                                 />
+
+                                {auth.user.role === 'superadmin' && (
+                                    <GlassInput
+                                        label="Tag User"
+                                        value={data.tag}
+                                        onChange={(e) => setData('tag', e.target.value)}
+                                        options={[
+                                            { value: '', label: 'Tanpa Tag' },
+                                            { value: 'TEKNIS', label: 'TEKNIS' },
+                                            { value: 'ADMIN', label: 'ADMIN' },
+                                        ]}
+                                        error={errors.tag}
+                                    />
+                                )}
 
                                 <GlassInput
                                     label={editingAssistant ? 'Kata Sandi Baru (Kosongkan jika tetap)' : 'Kata Sandi'}
@@ -172,7 +190,20 @@ export const Index: React.FC<AssistantsProps> = ({ assistants }) => {
                                         <tbody className="divide-y divide-white/5 text-slate-300 font-medium">
                                             {assistants.map((ast) => (
                                                 <tr key={ast.id} className="hover:bg-white/2 transition duration-150">
-                                                    <td className="py-3 pr-2 font-bold text-slate-200 text-sm">{ast.name}</td>
+                                                    <td className="py-3 pr-2 font-bold text-slate-200 text-sm">
+                                                        <div className="flex items-center gap-2">
+                                                            {ast.name}
+                                                            {ast.tag && (
+                                                                <span className={`px-2 py-0.5 rounded text-4xs font-black tracking-wider ${
+                                                                    ast.tag === 'TEKNIS'
+                                                                        ? 'bg-rose-500/15 text-rose-300 border border-rose-500/20'
+                                                                        : 'bg-amber-500/15 text-amber-300 border border-amber-500/20'
+                                                                }`}>
+                                                                    {ast.tag}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </td>
                                                     <td className="py-3 px-2 text-slate-400 font-mono text-3xs">{ast.email}</td>
                                                     <td className="py-3 px-2 whitespace-nowrap">
                                                         <span className={`px-2 py-0.5 rounded text-3xs font-extrabold uppercase tracking-wide ${

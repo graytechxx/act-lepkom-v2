@@ -17,6 +17,8 @@ class User extends Authenticatable
         'active_room',
         'is_pj',
         'last_seen_at',
+        'must_change_password',
+        'tag',
     ];
 
     protected $hidden = [
@@ -31,6 +33,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_pj' => 'boolean',
             'last_seen_at' => 'datetime',
+            'must_change_password' => 'boolean',
         ];
     }
 
@@ -41,7 +44,7 @@ class User extends Authenticatable
 
     public function isSuperAdmin(): bool
     {
-        return $this->role === self::ROLE_SUPERADMIN;
+        return $this->role === self::ROLE_SUPERADMIN || $this->tag === 'TEKNIS';
     }
 
     public function isStaff(): bool

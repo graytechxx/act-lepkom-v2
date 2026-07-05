@@ -11,8 +11,18 @@ use Illuminate\Support\Facades\Storage;
 
 class MaterialController extends Controller
 {
+    protected function checkAuthorization()
+    {
+        $user = auth()->user();
+        if ($user && $user->role === 'asisten' && empty($user->tag)) {
+            abort(403, 'Asisten tanpa tag tidak diperbolehkan mengakses fitur Materi & Modul.');
+        }
+    }
+
     public function index()
     {
+        $this->checkAuthorization();
+
         return inertia('Admin/Materials/Index', [
             'materials' => Material::with(['level', 'course', 'uploader'])->latest()->get(),
             'levels' => Level::with('courses')->orderBy('order')->get(),
@@ -21,6 +31,8 @@ class MaterialController extends Controller
 
     public function store(Request $request)
     {
+        $this->checkAuthorization();
+
         $validated = $request->validate([
             'level_id' => 'nullable|exists:levels,id',
             'course_id' => 'nullable|exists:courses,id',
@@ -41,6 +53,8 @@ class MaterialController extends Controller
 
     public function upload(Request $request)
     {
+        $this->checkAuthorization();
+
         $request->validate([
             'file' => 'required|file|max:51200', // 50MB max
             'level_id' => 'nullable|exists:levels,id',
@@ -68,6 +82,8 @@ class MaterialController extends Controller
 
     public function destroy(Material $material)
     {
+        $this->checkAuthorization();
+
         if ($material->type === 'file' && Storage::exists($material->path)) {
             Storage::delete($material->path);
         }
@@ -79,6 +95,8 @@ class MaterialController extends Controller
 
     public function download(Material $material)
     {
+        $this->checkAuthorization();
+
         if ($material->type !== 'file' || !Storage::exists($material->path)) {
             return redirect()->back()->with('error', 'File tidak ditemukan');
         }

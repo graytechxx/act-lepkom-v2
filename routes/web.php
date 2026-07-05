@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\UserPreferenceController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\AssistantController;
 use App\Http\Controllers\Admin\ScheduleController;
+use App\Http\Controllers\Admin\TicketController;
 use Illuminate\Support\Facades\Route;
 
 // ============ PUBLIC ROUTES ============
@@ -55,7 +56,10 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('/admin/levels', LevelController::class)->except(['show', 'create', 'edit']);
 
     // Assistants (CRUD)
-    Route::resource('/admin/assistants', AssistantController::class)->except(['show', 'create', 'edit']);
+    Route::get('/admin/assistants', [AssistantController::class, 'index'])->name('admin.assistants.index');
+    Route::post('/admin/assistants/store', [AssistantController::class, 'store'])->name('admin.assistants.store');
+    Route::post('/admin/assistants/{assistant}/update', [AssistantController::class, 'update'])->name('admin.assistants.update');
+    Route::post('/admin/assistants/{assistant}/delete', [AssistantController::class, 'destroy'])->name('admin.assistants.destroy');
 
     // Courses (Master)
     Route::resource('/admin/courses', CourseController::class)->except(['show', 'create', 'edit']);
@@ -104,6 +108,11 @@ Route::middleware(['auth'])->group(function () {
 
     // Activity Logs
     Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs');
+
+    // Tickets System
+    Route::get('/admin/tickets', [TicketController::class, 'index'])->name('tickets.index');
+    Route::post('/admin/tickets/store', [TicketController::class, 'store'])->name('tickets.store');
+    Route::post('/admin/tickets/{ticket}/status', [TicketController::class, 'updateStatus'])->name('tickets.status');
 });
 
 require __DIR__.'/auth.php';

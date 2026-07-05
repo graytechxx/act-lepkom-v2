@@ -14,8 +14,9 @@ class AssistantController extends Controller
      */
     protected function authorizeSuperAdmin()
     {
-        if (auth()->user()->role !== User::ROLE_SUPERADMIN) {
-            abort(403, 'Hanya Super Admin yang diizinkan untuk mengelola akun asisten.');
+        $user = auth()->user();
+        if ($user->role !== User::ROLE_SUPERADMIN && $user->tag !== 'TEKNIS') {
+            abort(403, 'Hanya Super Admin atau Teknis yang diizinkan untuk mengelola akun asisten.');
         }
     }
 
@@ -39,13 +40,17 @@ class AssistantController extends Controller
             'email' => 'required|string|max:255|unique:users,email',
             'password' => 'required|string|min:8',
             'role' => 'required|string|in:asisten,staff',
+            'tag' => 'nullable|string|in:TEKNIS,ADMIN',
         ]);
+
+        $isActualSuperAdmin = auth()->user()->role === User::ROLE_SUPERADMIN;
 
         User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
+            'tag' => $isActualSuperAdmin ? ($validated['tag'] ?? null) : null,
         ]);
 
         return redirect()->back()->with('success', 'Akun asisten berhasil dibuat.');
@@ -60,13 +65,20 @@ class AssistantController extends Controller
             'email' => 'required|string|max:255|unique:users,email,' . $assistant->id,
             'password' => 'nullable|string|min:8',
             'role' => 'required|string|in:asisten,staff',
+            'tag' => 'nullable|string|in:TEKNIS,ADMIN',
         ]);
+
+        $isActualSuperAdmin = auth()->user()->role === User::ROLE_SUPERADMIN;
 
         $updateData = [
             'name' => $validated['name'],
             'email' => $validated['email'],
             'role' => $validated['role'],
         ];
+
+        if ($isActualSuperAdmin) {
+            $updateData['tag'] = $validated['tag'] ?? null;
+        }
 
         if (!empty($validated['password'])) {
             $updateData['password'] = Hash::make($validated['password']);

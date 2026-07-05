@@ -26,7 +26,9 @@ class DashboardController extends Controller
         $onlineAssistants = \App\Models\User::whereIn('role', ['asisten', 'staff'])
             ->where('last_seen_at', '>=', now()->subMinutes(10))
             ->orderBy('name')
-            ->get(['id', 'name', 'role', 'active_room', 'is_pj', 'last_seen_at']);
+            ->get(['id', 'name', 'role', 'active_room', 'is_pj', 'last_seen_at', 'tag']);
+
+        $scheduleModel = \App\Models\Schedule::where('key', 'assistant_schedule')->first();
 
         $stats = [
             'userCount' => \App\Models\User::count(),
@@ -45,6 +47,7 @@ class DashboardController extends Controller
                 ->orderBy('start')
                 ->take(5)
                 ->get(),
+            'schedule' => $scheduleModel ? $scheduleModel->data : [],
         ];
 
         return inertia('Admin/Dashboard', $stats);

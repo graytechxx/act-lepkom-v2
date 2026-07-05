@@ -6,6 +6,7 @@ interface User {
     name: string;
     email: string;
     role: string;
+    tag?: string | null;
 }
 
 interface PageProps {
@@ -47,13 +48,18 @@ export const GlassAdminLayout: React.FC<GlassAdminLayoutProps> = ({ children }) 
 
     const currentPath = window.location.pathname;
 
+    const isAssistantWithoutTag = auth.user.role === 'asisten' && !auth.user.tag;
+
     const navItems = [
         { label: 'Dasbor', path: '/dashboard', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
-        { label: 'Materi & Modul', path: '/admin/materials', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' },
-        { label: 'File Upload', path: '/admin/uploads', icon: 'M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12' },
+        ...(isAssistantWithoutTag ? [] : [
+            { label: 'Materi & Modul', path: '/admin/materials', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' }
+        ]),
+        { label: 'Cek Upload Praktikan', path: '/admin/uploads', icon: 'M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12' },
         { label: 'Catatan Pribadi', path: '/admin/notes', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
         { label: 'Pastebin Saya', path: '/admin/pastebins', icon: 'M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
         { label: 'Ruang Chat', path: '/admin/chat', icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z' },
+        { label: 'Tiket Keluhan', path: '/admin/tickets', icon: 'M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z' },
     ];
 
     // Master Data links (Superadmin / Staff only)
@@ -72,7 +78,7 @@ export const GlassAdminLayout: React.FC<GlassAdminLayoutProps> = ({ children }) 
         { label: 'Kelola Asisten', path: '/admin/assistants', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' }
     ];
 
-    const isPrivileged = auth.user.role === 'superadmin' || auth.user.role === 'staff';
+    const isPrivileged = auth.user.role === 'superadmin' || auth.user.role === 'staff' || auth.user.tag === 'TEKNIS';
 
     return (
         <div className="min-h-screen bg-mesh text-slate-100 font-sans relative selection:bg-indigo-500/25 overflow-x-hidden">
@@ -147,7 +153,7 @@ export const GlassAdminLayout: React.FC<GlassAdminLayoutProps> = ({ children }) 
                     )}
 
                     {/* Superadmin Menu */}
-                    {auth.user.role === 'superadmin' && (
+                    {(auth.user.role === 'superadmin' || auth.user.tag === 'TEKNIS') && (
                         <div className="space-y-1.5">
                             <p className="text-4xs font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Administrasi</p>
                             {superadminItems.map((item) => {
@@ -296,7 +302,7 @@ export const GlassAdminLayout: React.FC<GlassAdminLayoutProps> = ({ children }) 
                             )}
 
                             {/* Mobile Superadmin Menu */}
-                            {auth.user.role === 'superadmin' && (
+                            {(auth.user.role === 'superadmin' || auth.user.tag === 'TEKNIS') && (
                                 <div className="space-y-1">
                                     <p className="text-4xs font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Administrasi</p>
                                     {superadminItems.map((item) => {
