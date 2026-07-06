@@ -60,10 +60,26 @@ export const Dashboard: React.FC<DashboardProps> = ({
         if (!schedule || schedule.length === 0) return [];
         
         const dayOrder = ['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu', 'minggu'];
+        
+        const normalizeDay = (day: string) => {
+            let d = day.toLowerCase().trim();
+            if (d.includes('jum')) return 'jumat';
+            return d;
+        };
+
+        const parseTimeToMinutes = (timeStr: string) => {
+            const cleanStr = timeStr.replace('.', ':');
+            const match = cleanStr.match(/(\d{1,2}):(\d{2})/);
+            if (match) {
+                return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
+            }
+            return 9999;
+        };
+
         const sortRows = (rows: any[]) => {
             return [...rows].sort((a, b) => {
-                const dayA = String(a['Hari'] || a['day'] || '').toLowerCase().trim();
-                const dayB = String(b['Hari'] || b['day'] || '').toLowerCase().trim();
+                const dayA = normalizeDay(String(a['Hari'] || a['day'] || ''));
+                const dayB = normalizeDay(String(b['Hari'] || b['day'] || ''));
                 const idxA = dayOrder.indexOf(dayA);
                 const idxB = dayOrder.indexOf(dayB);
                 
@@ -73,6 +89,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 
                 const timeA = String(a['Jam'] || a['time'] || a['waktu'] || '');
                 const timeB = String(b['Jam'] || b['time'] || b['waktu'] || '');
+                
+                const minsA = parseTimeToMinutes(timeA);
+                const minsB = parseTimeToMinutes(timeB);
+                
+                if (minsA !== minsB) {
+                    return minsA - minsB;
+                }
+                
                 return timeA.localeCompare(timeB);
             });
         };

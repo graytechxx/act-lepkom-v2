@@ -11,9 +11,53 @@ interface JadwalAsistenProps {
 export const JadwalAsisten: React.FC<JadwalAsistenProps> = ({ schedule }) => {
     const [searchQuery, setSearchQuery] = useState('');
 
+    const sortedSchedule = React.useMemo(() => {
+        if (!schedule || schedule.length === 0) return [];
+        
+        const dayOrder = ['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu', 'minggu'];
+        
+        const normalizeDay = (day: string) => {
+            let d = day.toLowerCase().trim();
+            if (d.includes('jum')) return 'jumat';
+            return d;
+        };
+
+        const parseTimeToMinutes = (timeStr: string) => {
+            const cleanStr = timeStr.replace('.', ':');
+            const match = cleanStr.match(/(\d{1,2}):(\d{2})/);
+            if (match) {
+                return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
+            }
+            return 9999;
+        };
+
+        return [...schedule].sort((a, b) => {
+            const dayA = normalizeDay(String(a['Hari'] || a['day'] || ''));
+            const dayB = normalizeDay(String(b['Hari'] || b['day'] || ''));
+            const idxA = dayOrder.indexOf(dayA);
+            const idxB = dayOrder.indexOf(dayB);
+            
+            if (idxA !== idxB) {
+                return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
+            }
+            
+            const timeA = String(a['Jam'] || a['time'] || a['waktu'] || '');
+            const timeB = String(b['Jam'] || b['time'] || b['waktu'] || '');
+            
+            const minsA = parseTimeToMinutes(timeA);
+            const minsB = parseTimeToMinutes(timeB);
+            
+            if (minsA !== minsB) {
+                return minsA - minsB;
+            }
+            
+            return timeA.localeCompare(timeB);
+        });
+    }, [schedule]);
+
     const headers = schedule.length > 0 ? Object.keys(schedule[0]) : [];
 
-    const filteredRows = schedule.filter(row => {
+    const filteredRows = sortedSchedule.filter(row => {
         if (!searchQuery.trim()) return true;
         const q = searchQuery.toLowerCase();
         return Object.values(row).some(val => 
