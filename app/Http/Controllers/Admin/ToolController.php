@@ -80,6 +80,16 @@ class ToolController extends Controller
 
         $logs = $process->output() . "\n" . $process->errorOutput();
         $logs = mb_convert_encoding($logs, 'UTF-8', 'UTF-8');
+        
+        // Clean up paths for presentation
+        $logs = str_replace($outputDir . DIRECTORY_SEPARATOR, '', $logs);
+        $logs = str_replace($outputDir, '', $logs);
+        $logs = str_replace($tempPath, '[Temp]', $logs);
+        $logs = str_replace('C:/laragon/www/act-lepkom-v2', '[App]', $logs);
+        $logs = str_replace('C:\\laragon\\www\\act-lepkom-v2', '[App]', $logs);
+        $logs = str_replace('C:/Users/anggi', '[User]', $logs);
+        $logs = str_replace('C:\\Users\\anggi', '[User]', $logs);
+
         $exitCode = $process->exitCode();
 
         if ($exitCode !== 0) {
