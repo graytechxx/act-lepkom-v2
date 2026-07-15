@@ -29,4 +29,11 @@ class ScheduleController extends Controller
 
         return redirect()->back()->with('success', 'Jadwal asisten berhasil diperbarui.');
     }
+
+    public function destroy()
+    {
+        Schedule::where('key', 'assistant_schedule')->delete();
+
+        return redirect()->back()->with('success', 'Jadwal asisten berhasil direset.');
+    }
 }

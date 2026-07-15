@@ -165,7 +165,7 @@ export const Index: React.FC<ChatProps> = ({ messages: initialMessages }) => {
                                     handleSendMessage(e);
                                 }
                             }}
-                            className="grow bg-white/3 border border-white/10 text-slate-100 rounded-xl px-4 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-indigo-500/40 focus:ring-1 focus:ring-indigo-500/20 max-h-24 resize-none transition-all"
+                            className="grow bg-slate-900 border border-white/10 text-white rounded-xl px-4 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-indigo-500/40 focus:ring-1 focus:ring-indigo-500/20 max-h-24 resize-none transition-all"
                         />
                         <GlassButton
                             type="submit"

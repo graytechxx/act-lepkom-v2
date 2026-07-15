@@ -1,0 +1,124 @@
+services:
+  # ============================================================
+  # PHP-FPM Application
+  # ============================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: act-lepkom-app
+    restart: unless-stopped
+    volumes:
+      - .:/var/www/html:delegated
+      - storage_data:/var/www/html/storage
+      - ./public:/var/www/html/public
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_URL=http://localhost:8080
+      - DB_CONNECTION=${DB_CONNECTION:-mysql}
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-act_lepkom}
+      - DB_USERNAME=${DB_USERNAME:-lepkom_user}
+      - DB_PASSWORD=${DB_PASSWORD:-secret}
+      - SESSION_DRIVER=file
+      - CACHE_STORE=file
+      - QUEUE_CONNECTION=database
+      - FILESYSTEM_DISK=local
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - lepkom-network
+
+  # ============================================================
+  # Nginx Web Server
+  # ============================================================
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: act-lepkom-nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+      - "8443:443"
+    volumes:
+      - .:/var/www/html:delegated
+      - ./.docker/nginx/default.conf:/etc/nginx/http.d/default.conf:ro
+    depends_on:
+      - app
+    networks:
+      - lepkom-network
+
+  # ============================================================
+  # MySQL Database
+  # ============================================================
+  mysql:
+    image: mysql:8.4
+    container_name: act-lepkom-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_secret
+      MYSQL_DATABASE: ${DB_DATABASE:-act_lepkom}
+      MYSQL_USER: ${DB_USERNAME:-lepkom_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_secret"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - lepkom-network
+
+  # ============================================================
+  # phpMyAdmin
+  # ============================================================
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: act-lepkom-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root_secret
+      UPLOAD_LIMIT: 100M
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql
+    networks:
+      - lepkom-network
+
+  # ============================================================
+  # Node/Vite for frontend hot-reload (development only)
+  # ============================================================
+  vite:
+    image: node:22-alpine
+    container_name: act-lepkom-vite
+    restart: unless-stopped
+    working_dir: /app
+    command: sh -c "npm install --ignore-scripts && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    profiles:
+      - dev
+    networks:
+      - lepkom-network
+
+volumes:
+  mysql_data:
+  storage_data:
+
+networks:
+  lepkom-network:
+    driver: bridge

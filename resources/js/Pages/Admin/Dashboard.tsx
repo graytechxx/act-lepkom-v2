@@ -55,6 +55,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     schedule = []
 }) => {
     const { auth } = usePage<any>().props;
+    const isPrivileged = auth.user.role === 'superadmin' || auth.user.role === 'staff' || auth.user.tag === 'TEKNIS';
 
     const mySchedule = React.useMemo(() => {
         if (!schedule || schedule.length === 0) return [];

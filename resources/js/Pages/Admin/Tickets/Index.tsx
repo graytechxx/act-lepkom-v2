@@ -37,6 +37,7 @@ export const Index: React.FC<TicketsProps> = ({ tickets }) => {
     const [notifications, setNotifications] = useState<ToastNotification[]>([]);
 
     const prevTicketsRef = useRef<Ticket[]>(tickets);
+    const isUpdatingRef = useRef(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         title: '',
@@ -57,34 +58,44 @@ export const Index: React.FC<TicketsProps> = ({ tickets }) => {
         const prevTickets = prevTicketsRef.current;
         const newNotifications: ToastNotification[] = [];
 
-        tickets.forEach((ticket) => {
-            const prev = prevTickets.find((t) => t.id === ticket.id);
-            if (prev) {
-                if (prev.status !== ticket.status) {
-                    const statusLabels = { open: 'Terbuka', progress: 'Diproses', resolved: 'Selesai' };
-                    newNotifications.push({
-                        id: `${ticket.id}-${Date.now()}-status`,
-                        message: `Tiket #${ticket.id} "${ticket.title}" status diperbarui menjadi: ${statusLabels[ticket.status]}`,
-                    });
+        if (!isUpdatingRef.current) {
+            tickets.forEach((ticket) => {
+                const prev = prevTickets.find((t) => t.id === ticket.id);
+                if (prev) {
+                    if (prev.status !== ticket.status) {
+                        const statusLabels = { open: 'Terbuka', progress: 'Diproses', resolved: 'Selesai' };
+                        newNotifications.push({
+                            id: `${ticket.id}-${Date.now()}-status`,
+                            message: `Tiket #${ticket.id} "${ticket.title}" status diperbarui menjadi: ${statusLabels[ticket.status]}`,
+                        });
+                    }
+                } else {
+                    // New ticket from another user
+                    if (ticket.user_id !== auth.user.id) {
+                        newNotifications.push({
+                            id: `${ticket.id}-${Date.now()}-new`,
+                            message: `Tiket baru #${ticket.id} dari ${ticket.user?.name || 'Asisten'}: "${ticket.title}"`,
+                        });
+                    }
                 }
-            } else {
-                // New ticket from another user
-                if (ticket.user_id !== auth.user.id) {
-                    newNotifications.push({
-                        id: `${ticket.id}-${Date.now()}-new`,
-                        message: `Tiket baru #${ticket.id} dari ${ticket.user?.name || 'Asisten'}: "${ticket.title}"`,
-                    });
-                }
-            }
-        });
+            });
+        }
 
         if (newNotifications.length > 0) {
-            setNotifications((prev) => [...prev, ...newNotifications]);
-            // Auto clear each new notification after 5 seconds
-            newNotifications.forEach((n) => {
-                setTimeout(() => {
-                    setNotifications((prev) => prev.filter((x) => x.id !== n.id));
-                }, 5000);
+            setNotifications((prev) => {
+                // Filter out duplicate messages to prevent double toasts
+                const filteredNew = newNotifications.filter(
+                    (n) => !prev.some((p) => p.message === n.message)
+                );
+
+                // Set timeout to dismiss only the newly added unique notifications
+                filteredNew.forEach((n) => {
+                    setTimeout(() => {
+                        setNotifications((current) => current.filter((x) => x.id !== n.id));
+                    }, 5000);
+                });
+
+                return [...prev, ...filteredNew];
             });
         }
 
@@ -105,7 +116,14 @@ export const Index: React.FC<TicketsProps> = ({ tickets }) => {
     };
 
     const handleUpdateStatus = (ticketId: number, status: 'open' | 'progress' | 'resolved') => {
-        router.post(`/admin/tickets/${ticketId}/status`, { status });
+        isUpdatingRef.current = true;
+        router.post(`/admin/tickets/${ticketId}/status`, { status }, {
+            onFinish: () => {
+                setTimeout(() => {
+                    isUpdatingRef.current = false;
+                }, 100);
+            }
+        });
     };
 
     const canUpdateStatus = (ticket: Ticket) => {

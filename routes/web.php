@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\AssistantController;
 use App\Http\Controllers\Admin\ScheduleController;
 use App\Http\Controllers\Admin\TicketController;
+use App\Http\Controllers\Admin\ToolController;
 use Illuminate\Support\Facades\Route;
 
 // ============ PUBLIC ROUTES ============
@@ -27,7 +28,7 @@ Route::get('/', [PublicController::class, 'home'])->name('home');
 Route::get('/materi', [PublicController::class, 'materi'])->name('materi');
 Route::get('/tata-tertib', [PublicController::class, 'tataTertib'])->name('tata-tertib');
 Route::get('/login', [PublicController::class, 'login'])->name('login');
-Route::get('/jadwal-asisten', [PublicController::class, 'jadwalAsisten'])->name('jadwal-asisten');
+Route::redirect('/jadwal-asisten', '/');
 Route::post('/public/upload', [UploadController::class, 'publicUpload'])->name('public.upload');
 
 // Public API
@@ -94,6 +95,7 @@ Route::middleware(['auth'])->group(function () {
     // Schedules
     Route::get('/admin/schedules', [ScheduleController::class, 'index'])->name('admin.schedules');
     Route::post('/admin/schedules', [ScheduleController::class, 'store']);
+    Route::delete('/admin/schedules', [ScheduleController::class, 'destroy'])->name('admin.schedules.destroy');
 
     // Uploads
     Route::get('/admin/uploads', [UploadController::class, 'index'])->name('uploads');
@@ -113,6 +115,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/tickets', [TicketController::class, 'index'])->name('tickets.index');
     Route::post('/admin/tickets/store', [TicketController::class, 'store'])->name('tickets.store');
     Route::post('/admin/tickets/{ticket}/status', [TicketController::class, 'updateStatus'])->name('tickets.status');
+
+    // Extra Tools
+    Route::get('/admin/moodle-bulk-upload', [ToolController::class, 'moodleBulkUpload'])->name('admin.moodle-bulk-upload');
+    Route::get('/admin/excel-maker', [ToolController::class, 'excelMaker'])->name('admin.excel-maker');
+    Route::post('/admin/excel-maker/generate', [ToolController::class, 'excelMakerGenerate'])->name('admin.excel-maker.generate');
+    Route::get('/admin/excel-maker/download', [ToolController::class, 'excelMakerDownload'])->name('admin.excel-maker.download');
 });
 
 require __DIR__.'/auth.php';

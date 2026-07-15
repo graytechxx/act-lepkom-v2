@@ -284,6 +284,22 @@ export const Index: React.FC<IndexProps> = ({ schedule }) => {
         }
     };
 
+    const handleResetActiveSchedule = () => {
+        if (confirm('Apakah Anda yakin ingin menghapus/mereset seluruh jadwal aktif dari database?')) {
+            router.delete('/admin/schedules', {
+                onSuccess: () => {
+                    setParsedHeaders([]);
+                    setParsedRows([]);
+                    setFileName('');
+                },
+                onError: (errors) => {
+                    console.error(errors);
+                    alert('Gagal mereset jadwal.');
+                }
+            });
+        }
+    };
+
     return (
         <GlassAdminLayout>
             <Head title="Kelola Jadwal Asisten" />
@@ -336,6 +352,19 @@ export const Index: React.FC<IndexProps> = ({ schedule }) => {
                                     </GlassButton>
                                 )}
                             </div>
+
+                            {schedule && schedule.length > 0 && (
+                                <GlassButton
+                                    variant="danger"
+                                    className="w-full text-2xs font-bold py-2 mt-2 border-red-500/20 hover:border-red-500/40 text-red-300 hover:text-red-200 bg-red-500/5 hover:bg-red-500/10 flex items-center justify-center gap-1.5"
+                                    onClick={handleResetActiveSchedule}
+                                >
+                                    <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    Hapus Jadwal Aktif
+                                </GlassButton>
+                            )}
                         </GlassCard>
                     </div>
 

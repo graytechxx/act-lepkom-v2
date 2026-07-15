@@ -78,6 +78,11 @@ export const GlassAdminLayout: React.FC<GlassAdminLayoutProps> = ({ children }) 
         { label: 'Kelola Asisten', path: '/admin/assistants', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' }
     ];
 
+    const toolItems = [
+        { label: 'Moodle Bulk Upload', path: '/admin/moodle-bulk-upload', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
+        { label: 'Lepkom Excel Maker', path: '/admin/excel-maker', icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' }
+    ];
+
     const isPrivileged = auth.user.role === 'superadmin' || auth.user.role === 'staff' || auth.user.tag === 'TEKNIS';
 
     return (
@@ -125,6 +130,32 @@ export const GlassAdminLayout: React.FC<GlassAdminLayoutProps> = ({ children }) 
                             );
                         })}
                     </div>
+
+                    {/* Tools Menu */}
+                    {isPrivileged && (
+                        <div className="space-y-1.5">
+                            <p className="text-4xs font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Alat & Utilitas</p>
+                            {toolItems.map((item) => {
+                                const active = currentPath === item.path;
+                                return (
+                                    <Link
+                                        key={item.path}
+                                        href={item.path}
+                                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
+                                            active
+                                                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-indigo-500/10'
+                                                : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                                        }`}
+                                    >
+                                        <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon} />
+                                        </svg>
+                                        {item.label}
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    )}
 
                     {/* Master Data Menu */}
                     {isPrivileged && (
@@ -193,10 +224,9 @@ export const GlassAdminLayout: React.FC<GlassAdminLayoutProps> = ({ children }) 
                 </div>
             </aside>
 
-            {/* Main Pane */}
             <div className="lg:pl-64 flex flex-col min-h-screen">
                 {/* Header (Top Nav) */}
-                <header className="h-16 border-b border-white/10 bg-white/3 backdrop-blur-md sticky top-0 z-30 flex justify-between items-center px-4 sm:px-6 lg:px-8">
+                <header className="h-16 border-b border-white/10 bg-white/3 backdrop-blur-md fixed top-0 right-0 left-0 lg:left-64 z-30 flex justify-between items-center px-4 sm:px-6 lg:px-8">
                     {/* Hamburg menu button */}
                     <button
                         onClick={() => setMobileMenuOpen(true)}
@@ -226,6 +256,9 @@ export const GlassAdminLayout: React.FC<GlassAdminLayoutProps> = ({ children }) 
                         </button>
                     </div>
                 </header>
+
+                {/* Spacer for fixed header */}
+                <div className="h-16 shrink-0"></div>
 
                 {/* Content wrapper */}
                 <main className="flex-1 p-4 sm:p-6 lg:p-8 animate-fade-in">
@@ -275,6 +308,31 @@ export const GlassAdminLayout: React.FC<GlassAdminLayoutProps> = ({ children }) 
                                     );
                                 })}
                             </div>
+
+                            {/* Tools */}
+                            {isPrivileged && (
+                                <div className="space-y-1">
+                                    <p className="text-4xs font-bold text-slate-500 uppercase tracking-widest px-3 mb-2">Alat & Utilitas</p>
+                                    {toolItems.map((item) => {
+                                        const active = currentPath === item.path;
+                                        return (
+                                            <Link
+                                                key={item.path}
+                                                href={item.path}
+                                                onClick={() => setMobileMenuOpen(false)}
+                                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold ${
+                                                    active ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+                                                }`}
+                                            >
+                                                <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon} />
+                                                </svg>
+                                                {item.label}
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                            )}
 
                             {/* Privileged */}
                             {isPrivileged && (

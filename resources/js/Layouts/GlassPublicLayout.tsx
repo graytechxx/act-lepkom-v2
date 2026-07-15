@@ -128,9 +128,6 @@ export const GlassPublicLayout: React.FC<GlassPublicLayoutProps> = ({ children }
                             <Link href="/materi" className="text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors">
                                 Materi
                             </Link>
-                            <Link href="/jadwal-asisten" className="text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors">
-                                Jadwal Asisten
-                            </Link>
                         </nav>
 
                         {/* Search and Room status */}
@@ -204,9 +201,6 @@ export const GlassPublicLayout: React.FC<GlassPublicLayoutProps> = ({ children }
                         </Link>
                         <Link href="/materi" className="block py-2 text-sm font-semibold text-slate-700" onClick={() => setMobileMenuOpen(false)}>
                             Materi
-                        </Link>
-                        <Link href="/jadwal-asisten" className="block py-2 text-sm font-semibold text-slate-700" onClick={() => setMobileMenuOpen(false)}>
-                            Jadwal Asisten
                         </Link>
 
                         <form onSubmit={handleSearchPastebin} className="relative">
