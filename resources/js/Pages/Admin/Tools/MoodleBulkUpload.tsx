@@ -13,26 +13,19 @@ interface UserRow {
 }
 
 export const MoodleBulkUpload: React.FC = () => {
-    const getDefaultPrefix = () => {
+    const getDefaultYearSuffix = () => {
         const now = new Date();
         const month = now.getMonth() + 1; // 1-12
         const year = now.getFullYear();
-        const year2 = String(year).slice(-2);
         
-        // PTA is Odd Semester (Sept - Feb)
-        // ATA is Even Semester (Mar - Aug)
-        if (month >= 7 && month <= 12) {
-            return `PTA${year2}`;
-        } else if (month >= 1 && month <= 2) {
-            const prevYear2 = String(year - 1).slice(-2);
-            return `PTA${prevYear2}`;
-        } else {
-            const prevYear2 = String(year - 1).slice(-2);
-            return `ATA${prevYear2}`;
+        // If we are in Jan/Feb, we are in the academic year that started in the previous year
+        if (month <= 2) {
+            return String(year - 1).slice(-2);
         }
+        return String(year).slice(-2);
     };
 
-    const [usernamePrefix, setUsernamePrefix] = useState(getDefaultPrefix());
+    const [yearSuffix, setYearSuffix] = useState(getDefaultYearSuffix());
     const [rows, setRows] = useState<UserRow[]>([
         { username: '', password: 'lepkomnewnormal', firstname: '', lastname: '', email: '' }
     ]);
@@ -49,11 +42,10 @@ export const MoodleBulkUpload: React.FC = () => {
             [field]: val
         };
         
-        // Auto-generate email based on username
+        // Auto-generate email preview text
         if (field === 'username') {
             const cleanUser = val.toLowerCase().replace(/\s+/g, '');
-            const finalUsername = cleanUser ? `${usernamePrefix}-${cleanUser}` : '';
-            updated[index].email = finalUsername ? `${finalUsername}@lepkom.com` : '';
+            updated[index].email = cleanUser ? `pta/ata${yearSuffix}-${cleanUser}@lepkom.com` : '';
         }
         
         setRows(updated);
@@ -71,20 +63,35 @@ export const MoodleBulkUpload: React.FC = () => {
         }
     };
 
-    // Filter rows and dynamically prepend prefix
+    // Filter rows and generate BOTH PTA and ATA rows for each entry
     const previewRows = useMemo(() => {
-        return rows
+        const result: UserRow[] = [];
+        
+        rows
             .filter(r => r.username.trim() !== '' || r.firstname.trim() !== '')
-            .map(row => {
+            .forEach(row => {
                 const cleanUser = row.username.trim().replace(/^(PTA|ATA)\d+-/i, '');
-                const finalUsername = cleanUser ? `${usernamePrefix}-${cleanUser}` : '';
-                return {
-                    ...row,
-                    username: finalUsername,
-                    email: finalUsername ? `${finalUsername.toLowerCase()}@lepkom.com` : ''
-                };
+                if (cleanUser) {
+                    // 1. PTA Row
+                    const ptaUser = `PTA${yearSuffix}-${cleanUser}`;
+                    result.push({
+                        ...row,
+                        username: ptaUser,
+                        email: `${ptaUser.toLowerCase()}@lepkom.com`
+                    });
+                    
+                    // 2. ATA Row
+                    const ataUser = `ATA${yearSuffix}-${cleanUser}`;
+                    result.push({
+                        ...row,
+                        username: ataUser,
+                        email: `${ataUser.toLowerCase()}@lepkom.com`
+                    });
+                }
             });
-    }, [rows, usernamePrefix]);
+            
+        return result;
+    }, [rows, yearSuffix]);
 
     const validationStatus = useMemo(() => {
         if (previewRows.length === 0) return { valid: false, message: 'Isi data user terlebih dahulu.' };
@@ -102,7 +109,7 @@ export const MoodleBulkUpload: React.FC = () => {
             return { valid: false, warning: true, message: 'Masih ada kolom wajib (NPM/Username, Nama Depan, Nama Belakang, Email) yang kosong.' };
         }
 
-        return { valid: true, message: `${previewRows.length} user siap diunduh!` };
+        return { valid: true, message: `${previewRows.length} akun (${previewRows.length / 2} pasang PTA & ATA) siap diunduh!` };
     }, [previewRows]);
 
     const downloadCsv = () => {
@@ -123,7 +130,7 @@ export const MoodleBulkUpload: React.FC = () => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', 'users_moodle.csv');
+        link.setAttribute('download', `users_moodle_PTA_ATA_${yearSuffix}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -152,14 +159,13 @@ export const MoodleBulkUpload: React.FC = () => {
                 }
                 
                 const cleanUser = username.toLowerCase().replace(/\s+/g, '');
-                const finalUsername = cleanUser ? `${usernamePrefix}-${cleanUser}` : '';
 
                 return {
                     username: username,
                     password: 'lepkomnewnormal',
                     firstname: firstname,
                     lastname: lastname,
-                    email: finalUsername ? `${finalUsername}@lepkom.com` : '',
+                    email: cleanUser ? `pta/ata${yearSuffix}-${cleanUser}@lepkom.com` : '',
                 };
             });
 
@@ -189,7 +195,7 @@ export const MoodleBulkUpload: React.FC = () => {
                             Moodle Bulk User Upload
                         </h1>
                         <p className="text-3xs sm:text-2xs font-extrabold uppercase text-slate-400 tracking-wider">
-                            Isi data user, nanti tinggal download CSV dan upload ke Moodle
+                            Isi data user sekali, otomatis generate akun PTA dan ATA sekaligus
                         </p>
                     </div>
 
@@ -221,15 +227,16 @@ export const MoodleBulkUpload: React.FC = () => {
                 {/* Configuration Panel */}
                 <GlassCard className="border-white/5 shadow-md p-4 flex flex-wrap gap-4 items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <label className="text-3xs font-extrabold uppercase tracking-widest text-slate-400">Prefix Username (Periode):</label>
+                        <label className="text-3xs font-extrabold uppercase tracking-widest text-slate-400">Suffix Tahun Ajaran (2 Digit):</label>
                         <input
                             type="text"
-                            value={usernamePrefix}
-                            onChange={(e) => setUsernamePrefix(e.target.value.trim().toUpperCase())}
-                            className="w-28 px-3 py-1.5 rounded-lg border border-white/10 bg-slate-950/40 text-indigo-300 font-bold text-center text-xs focus:outline-none focus:border-indigo-500/50"
-                            placeholder="PTA26"
+                            maxLength={2}
+                            value={yearSuffix}
+                            onChange={(e) => setYearSuffix(e.target.value.trim().replace(/\D/g, ''))}
+                            className="w-20 px-3 py-1.5 rounded-lg border border-white/10 bg-slate-950/40 text-indigo-300 font-bold text-center text-xs focus:outline-none focus:border-indigo-500/50"
+                            placeholder="26"
                         />
-                        <span className="text-4xs text-slate-500 font-bold italic">(Otomatis dideteksi berdasarkan waktu server)</span>
+                        <span className="text-4xs text-slate-500 font-bold italic">(Menghasilkan akun PTA{yearSuffix}- dan ATA{yearSuffix}- secara bersamaan)</span>
                     </div>
                 </GlassCard>
 
@@ -263,7 +270,7 @@ export const MoodleBulkUpload: React.FC = () => {
                             Daftar User
                         </h3>
                         <span className="text-3xs font-extrabold uppercase bg-white/5 text-slate-300 border border-white/5 px-2 py-0.5 rounded-lg">
-                            {rows.length} Baris
+                            {rows.length} Baris Input
                         </span>
                     </div>
 
@@ -276,7 +283,7 @@ export const MoodleBulkUpload: React.FC = () => {
                                     <th className="py-3 px-4">Password</th>
                                     <th className="py-3 px-4">Nama Depan*</th>
                                     <th className="py-3 px-4">Nama Belakang*</th>
-                                    <th className="py-3 px-4">Email</th>
+                                    <th className="py-3 px-4">Email Preview</th>
                                     <th className="py-3 px-4 w-16 text-center">Aksi</th>
                                 </tr>
                             </thead>
@@ -286,7 +293,7 @@ export const MoodleBulkUpload: React.FC = () => {
                                         <td className="py-2.5 px-4 text-center font-bold text-slate-500">{idx + 1}</td>
                                         <td className="py-2 px-3">
                                             <div className="flex items-center w-full px-3 py-1.5 rounded-lg border border-white/10 bg-slate-950/20 focus-within:border-indigo-500/50 focus-within:ring-1 focus-within:ring-indigo-500/20 transition-all duration-200">
-                                                <span className="text-slate-500 font-bold pr-1 select-none">{usernamePrefix}-</span>
+                                                <span className="text-slate-500 font-bold pr-1 select-none">PTA/ATA{yearSuffix}-</span>
                                                 <input
                                                     type="text"
                                                     value={row.username.replace(/^(PTA|ATA)\d+-/i, '')}
@@ -326,10 +333,10 @@ export const MoodleBulkUpload: React.FC = () => {
                                         <td className="py-2 px-3">
                                             <input
                                                 type="email"
-                                                value={row.username ? `${usernamePrefix}-${row.username.toLowerCase()}@lepkom.com` : ''}
+                                                value={row.username ? `pta/ata${yearSuffix}-${row.username.toLowerCase()}@lepkom.com` : ''}
                                                 disabled
                                                 className="w-full px-3 py-1.5 rounded-lg border border-white/5 bg-white/5 text-slate-400 text-xs cursor-not-allowed outline-none select-none"
-                                                placeholder="username@lepkom.com"
+                                                placeholder="pta/ata26-username@lepkom.com"
                                             />
                                         </td>
                                         <td className="py-2 px-4 text-center">
@@ -404,10 +411,10 @@ export const MoodleBulkUpload: React.FC = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
-                            Preview Data ({previewRows.length} User)
+                            Preview Data ({previewRows.length} User - PTA & ATA)
                         </h3>
                         
-                        <div className="overflow-x-auto rounded-xl border border-white/5 bg-slate-950/10 max-h-[300px]">
+                        <div className="overflow-x-auto rounded-xl border border-white/5 bg-slate-950/10 max-h-[400px]">
                             <table className="w-full text-left border-collapse text-2xs text-slate-300 font-medium">
                                 <thead>
                                     <tr className="bg-white/3 border-b border-white/10 text-slate-400 uppercase font-extrabold tracking-widest text-3xs">
