@@ -1,0 +1,53 @@
+stages:
+  - build
+  - test
+
+# Cache dependencies across pipeline runs to speed up builds
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - vendor/
+    - node_modules/
+
+# --- BUILD STAGE ---
+build_assets:
+  stage: build
+  image: node:20-alpine
+  script:
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - public/build/
+    expire_in: 1 week
+
+build_composer:
+  stage: build
+  image: php:8.3-alpine
+  before_script:
+    - apk add --no-cache libpng-dev libjpeg-turbo-dev freetype-dev libzip-dev zip unzip git
+    - docker-php-ext-install gd zip
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+  script:
+    - composer install --no-ansi --no-interaction --no-progress --no-scripts --prefer-dist
+  artifacts:
+    paths:
+      - vendor/
+    expire_in: 1 week
+
+# --- TEST STAGE ---
+run_tests:
+  stage: test
+  image: php:8.3-alpine
+  variables:
+    DB_CONNECTION: sqlite
+    DB_DATABASE: ":memory:"
+  before_script:
+    - apk add --no-cache libpng-dev libzip-dev zip unzip git sqlite
+    - docker-php-ext-install pdo_sqlite zip
+    - cp .env.example .env
+    - php artisan key:generate
+  script:
+    - php artisan test
+  dependencies:
+    - build_composer
