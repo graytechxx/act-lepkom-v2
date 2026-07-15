@@ -13,6 +13,26 @@ interface UserRow {
 }
 
 export const MoodleBulkUpload: React.FC = () => {
+    const getDefaultPrefix = () => {
+        const now = new Date();
+        const month = now.getMonth() + 1; // 1-12
+        const year = now.getFullYear();
+        const year2 = String(year).slice(-2);
+        
+        // PTA is Odd Semester (Sept - Feb)
+        // ATA is Even Semester (Mar - Aug)
+        if (month >= 7 && month <= 12) {
+            return `PTA${year2}`;
+        } else if (month >= 1 && month <= 2) {
+            const prevYear2 = String(year - 1).slice(-2);
+            return `PTA${prevYear2}`;
+        } else {
+            const prevYear2 = String(year - 1).slice(-2);
+            return `ATA${prevYear2}`;
+        }
+    };
+
+    const [usernamePrefix, setUsernamePrefix] = useState(getDefaultPrefix());
     const [rows, setRows] = useState<UserRow[]>([
         { username: '', password: 'lepkomnewnormal', firstname: '', lastname: '', email: '' }
     ]);
@@ -20,15 +40,20 @@ export const MoodleBulkUpload: React.FC = () => {
 
     const handleInputChange = (index: number, field: keyof UserRow, value: string) => {
         const updated = [...rows];
+        let val = value;
+        if (field === 'username') {
+            val = value.trim().replace(/^(PTA|ATA)\d+-/i, '');
+        }
         updated[index] = {
             ...updated[index],
-            [field]: value
+            [field]: val
         };
         
         // Auto-generate email based on username
         if (field === 'username') {
-            const cleanUser = value.trim().toLowerCase().replace(/\s+/g, '');
-            updated[index].email = cleanUser ? `${cleanUser}@lepkom.com` : '';
+            const cleanUser = val.toLowerCase().replace(/\s+/g, '');
+            const finalUsername = cleanUser ? `${usernamePrefix}-${cleanUser}` : '';
+            updated[index].email = finalUsername ? `${finalUsername}@lepkom.com` : '';
         }
         
         setRows(updated);
@@ -46,10 +71,20 @@ export const MoodleBulkUpload: React.FC = () => {
         }
     };
 
-    // Filter rows that are not entirely empty
+    // Filter rows and dynamically prepend prefix
     const previewRows = useMemo(() => {
-        return rows.filter(r => r.username.trim() !== '' || r.firstname.trim() !== '');
-    }, [rows]);
+        return rows
+            .filter(r => r.username.trim() !== '' || r.firstname.trim() !== '')
+            .map(row => {
+                const cleanUser = row.username.trim().replace(/^(PTA|ATA)\d+-/i, '');
+                const finalUsername = cleanUser ? `${usernamePrefix}-${cleanUser}` : '';
+                return {
+                    ...row,
+                    username: finalUsername,
+                    email: finalUsername ? `${finalUsername.toLowerCase()}@lepkom.com` : ''
+                };
+            });
+    }, [rows, usernamePrefix]);
 
     const validationStatus = useMemo(() => {
         if (previewRows.length === 0) return { valid: false, message: 'Isi data user terlebih dahulu.' };
@@ -79,7 +114,6 @@ export const MoodleBulkUpload: React.FC = () => {
             ...previewRows.map(row => 
                 headers.map(header => {
                     const val = (row as any)[header] || '';
-                    // escape double quotes and wrap in quotes
                     return `"${val.replace(/"/g, '""')}"`;
                 }).join(',')
             )
@@ -101,10 +135,10 @@ export const MoodleBulkUpload: React.FC = () => {
             const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
             
             const newRows: UserRow[] = lines.map(line => {
-                // Split by tabs or commas
                 const delimiter = line.includes('\t') ? '\t' : (line.includes(',') ? ',' : ';');
                 const parts = line.split(delimiter).map(p => p.trim());
-                const username = parts[0] || '';
+                const rawUsername = parts[0] || '';
+                const username = rawUsername.replace(/^(PTA|ATA)\d+-/i, '');
                 
                 let firstname = '';
                 let lastname = '';
@@ -118,18 +152,18 @@ export const MoodleBulkUpload: React.FC = () => {
                 }
                 
                 const cleanUser = username.toLowerCase().replace(/\s+/g, '');
+                const finalUsername = cleanUser ? `${usernamePrefix}-${cleanUser}` : '';
 
                 return {
                     username: username,
                     password: 'lepkomnewnormal',
                     firstname: firstname,
                     lastname: lastname,
-                    email: cleanUser ? `${cleanUser}@lepkom.com` : '',
+                    email: finalUsername ? `${finalUsername}@lepkom.com` : '',
                 };
             });
 
             if (newRows.length > 0) {
-                // If the first row was empty, replace it
                 if (rows.length === 1 && !rows[0].username && !rows[0].firstname) {
                     setRows(newRows);
                 } else {
@@ -184,6 +218,21 @@ export const MoodleBulkUpload: React.FC = () => {
                     </div>
                 </div>
 
+                {/* Configuration Panel */}
+                <GlassCard className="border-white/5 shadow-md p-4 flex flex-wrap gap-4 items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <label className="text-3xs font-extrabold uppercase tracking-widest text-slate-400">Prefix Username (Periode):</label>
+                        <input
+                            type="text"
+                            value={usernamePrefix}
+                            onChange={(e) => setUsernamePrefix(e.target.value.trim().toUpperCase())}
+                            className="w-28 px-3 py-1.5 rounded-lg border border-white/10 bg-slate-950/40 text-indigo-300 font-bold text-center text-xs focus:outline-none focus:border-indigo-500/50"
+                            placeholder="PTA26"
+                        />
+                        <span className="text-4xs text-slate-500 font-bold italic">(Otomatis dideteksi berdasarkan waktu server)</span>
+                    </div>
+                </GlassCard>
+
                 {/* Guide Panel */}
                 {guideOpen && (
                     <GlassCard className="border-indigo-500/20 bg-indigo-500/5 animate-fade-in">
@@ -236,13 +285,16 @@ export const MoodleBulkUpload: React.FC = () => {
                                     <tr key={idx} className="hover:bg-white/2 transition duration-150">
                                         <td className="py-2.5 px-4 text-center font-bold text-slate-500">{idx + 1}</td>
                                         <td className="py-2 px-3">
-                                            <input
-                                                type="text"
-                                                value={row.username}
-                                                onChange={(e) => handleInputChange(idx, 'username', e.target.value)}
-                                                className="w-full px-3 py-1.5 rounded-lg border border-white/10 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 bg-slate-950/20 text-slate-200 text-xs focus:outline-none transition-all duration-200"
-                                                placeholder="NPM/Username"
-                                            />
+                                            <div className="flex items-center w-full px-3 py-1.5 rounded-lg border border-white/10 bg-slate-950/20 focus-within:border-indigo-500/50 focus-within:ring-1 focus-within:ring-indigo-500/20 transition-all duration-200">
+                                                <span className="text-slate-500 font-bold pr-1 select-none">{usernamePrefix}-</span>
+                                                <input
+                                                    type="text"
+                                                    value={row.username.replace(/^(PTA|ATA)\d+-/i, '')}
+                                                    onChange={(e) => handleInputChange(idx, 'username', e.target.value)}
+                                                    className="grow bg-transparent text-slate-200 text-xs focus:outline-none"
+                                                    placeholder="NPM"
+                                                />
+                                            </div>
                                         </td>
                                         <td className="py-2 px-3">
                                             <input
@@ -274,7 +326,7 @@ export const MoodleBulkUpload: React.FC = () => {
                                         <td className="py-2 px-3">
                                             <input
                                                 type="email"
-                                                value={row.email}
+                                                value={row.username ? `${usernamePrefix}-${row.username.toLowerCase()}@lepkom.com` : ''}
                                                 disabled
                                                 className="w-full px-3 py-1.5 rounded-lg border border-white/5 bg-white/5 text-slate-400 text-xs cursor-not-allowed outline-none select-none"
                                                 placeholder="username@lepkom.com"
