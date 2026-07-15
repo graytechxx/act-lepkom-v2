@@ -97,6 +97,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/admin/schedules', [ScheduleController::class, 'store']);
     Route::delete('/admin/schedules', [ScheduleController::class, 'destroy'])->name('admin.schedules.destroy');
 
+    // Attendance
+    Route::get('/admin/attendance', [AttendanceController::class, 'index'])->name('admin.attendance');
+    Route::post('/admin/attendance/check-in', [AttendanceController::class, 'checkIn'])->name('admin.attendance.checkin');
+    Route::post('/admin/attendance/check-out', [AttendanceController::class, 'checkOut'])->name('admin.attendance.checkout');
+
     // Uploads
     Route::get('/admin/uploads', [UploadController::class, 'index'])->name('uploads');
     Route::post('/admin/uploads', [UploadController::class, 'upload'])->name('uploads.upload');
