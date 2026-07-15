@@ -79,6 +79,7 @@ class ToolController extends Controller
         ]);
 
         $logs = $process->output() . "\n" . $process->errorOutput();
+        $logs = mb_convert_encoding($logs, 'UTF-8', 'UTF-8');
         $exitCode = $process->exitCode();
 
         if ($exitCode !== 0) {
